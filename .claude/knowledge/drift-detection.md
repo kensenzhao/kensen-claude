@@ -3,7 +3,7 @@ name: drift-detection
 description: 漂移检测引擎(check-knowledge-drift.py)是什么/怎么算出 STALE 与 GAP/退出码语义。改检测逻辑或排查"为什么报/不报漂移"时读。
 sources:
   - plugins/knowledge-keeper/scripts/check-knowledge-drift.py
-verified_at: 9ff3184
+verified_at: 1cfcdd6
 ---
 
 # 漂移检测引擎 (check-knowledge-drift.py)

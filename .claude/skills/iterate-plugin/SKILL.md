@@ -3,7 +3,7 @@ name: iterate-plugin
 description: 在本仓库(kensen-claude)改 knowledge-keeper 插件代码时必须使用——给出"改→回归→升版→推→让已装副本生效"的标准闭环与回归用例写法。涉及改 scripts/*.py、test.sh、hooks.json、模板或技能时触发。
 sources:
   - plugins/knowledge-keeper/test.sh
-verified_at: 9ff3184
+verified_at: 1cfcdd6
 ---
 
 # iterate-plugin — 安全迭代 knowledge-keeper

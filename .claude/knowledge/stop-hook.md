@@ -4,7 +4,7 @@ description: 会话结束的漂移提醒包装(stop-hook-knowledge-drift.py + ho
 sources:
   - plugins/knowledge-keeper/scripts/stop-hook-knowledge-drift.py
   - plugins/knowledge-keeper/hooks/hooks.json
-verified_at: 9ff3184
+verified_at: 1cfcdd6
 ---
 
 # Stop hook 包装 (stop-hook-knowledge-drift.py)
