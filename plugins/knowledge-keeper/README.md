@@ -1,14 +1,15 @@
 # knowledge-keeper（Claude Code 插件）
 
-给**任意项目**自举一套 AI 知识体系（`.claude/skills` + `.claude/knowledge`），并随代码自动保鲜——把"机制"(检测脚本 + Stop hook + 维护技能 + 一键 bootstrap)做成插件单独维护，**知识内容仍留在各自项目仓库**。
+给**任意项目**(后端 / 前端 / 前后端混合 monorepo 通吃)自举一套 AI 知识体系（`.claude/skills` + `.claude/knowledge`），并随代码自动保鲜——把"机制"(检测脚本 + Stop hook + 维护技能 + 一键 bootstrap)做成插件单独维护，**知识内容仍留在各自项目仓库**。机制只认文件路径,故栈无关;差异只在 bootstrap 时"建哪些域"(各栈清单见 `knowledge-bootstrap` 技能)。
 
 ## 它装了什么
+
+> 市场清单 `marketplace.json` 在**仓库根** `.claude-plugin/`(指向本插件 `./plugins/knowledge-keeper`),不在插件目录内。
 
 ```
 knowledge-keeper/
 ├── .claude-plugin/
-│   ├── plugin.json            # 插件清单
-│   └── marketplace.json       # 本地市场清单(source: "./")
+│   └── plugin.json            # 插件清单(name/version/description)
 ├── hooks/hooks.json           # Stop hook: 会话结束检测知识漂移
 ├── scripts/
 │   ├── check-knowledge-drift.py     # 确定性漂移检测(零配置;STALE 全自动,GAP 可选)
@@ -42,7 +43,9 @@ knowledge-keeper/
 
 - **给新项目建库**：开会话说「按 knowledge-bootstrap 给本项目建知识体系」。AI 会测绘→多 agent 抽取→对抗式审查→产出 `.claude/knowledge` + `.claude/skills`(带源码锚定 frontmatter)。机制(hook/检测)插件已自带，无需往项目拷脚本。
 - **日常维护**：你改完业务代码并提交后，AI 按 `skill-maintenance` 自主同步受影响文档；会话结束时插件 Stop hook 若发现漂移会**极简提醒一次**(同一组漂移不重复刷屏)。
-- **(可选) GAP 检测**：在目标项目根建 `.claude/knowledge-drift.config`，每行一个业务模块 glob(如 `src/*`)，即可检测"哪个模块还没文档覆盖"。
+- **(可选) GAP 检测**：在目标项目根建 `.claude/knowledge-drift.config`，每行一个业务模块 glob(如 `src/*`)，即可检测"哪个模块还没文档覆盖"。注意 GAP 是**粗粒度**:模块内只要有任一文件被某文档锚到,整模块即算已覆盖,发现不了"只记了一半"——GAP=0 ≠ 全覆盖。
+
+> **检测时机**:漂移基于 `git diff <verified_at>..HEAD`,只看**已提交**改动;工作区未提交的改动不触发(设计如此——修改未落地不算漂)。所以提醒出现在你 commit 之后,而非编辑当下。
 
 ## 与"项目自带副本"共存（重要）
 若某项目把漂移脚本**焊进了自己仓库**（存在 `scripts/check-knowledge-drift.py` 或 `scripts/stop-hook-knowledge-drift.py`，常见于团队共享仓库为了"别人不装插件也能用"），插件的全局 Stop hook 会**自动退让**(exit 0)，交给该项目自己的 hook，避免双触发 + 抢同一个 `.drift-state`。所以你可以放心在 user 级全局启用插件，不会打扰这类自包含项目。

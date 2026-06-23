@@ -1,6 +1,8 @@
 ---
 name: <kebab-case 技能名，如 add-endpoint>
-description: <既说"做什么"又说"何时触发"，要略 pushy 以确保自动触发。例：在本项目新增/修改一个 REST 接口时(新增 Controller 方法、新建 Service、加查询、定义请求/响应 VO)必须使用——给出本项目的标准链路与约定。>
+description: <既说"做什么"又说"何时触发"，要略 pushy 以确保自动触发。按栈举例:
+  · 后端——在本项目新增/修改 REST 接口时(新增 Controller 方法、新建 Service、加查询、定义请求/响应 VO)必须使用，给出本项目标准链路与约定。
+  · 前端——在本项目新增页面/路由或对接后端接口时(在 API 客户端层加调用、补类型、接 store、处理 loading/错误)必须使用，给出本项目的请求封装与状态约定。>
 sources:
   - <代表性真实示例文件，如 path/to/ExampleController.ext>
   - <相关基础设施目录/**>

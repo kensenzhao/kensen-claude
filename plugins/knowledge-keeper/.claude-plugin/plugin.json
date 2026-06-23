@@ -1,7 +1,7 @@
 {
   "name": "knowledge-keeper",
   "description": "给任意项目自举一套 AI 知识体系(skills + knowledge)并随代码自动保鲜:确定性漂移检测 + 安静 Stop hook + 维护技能 + 一键 bootstrap。Use when setting up a project's knowledge docs/skills, bootstrapping project onboarding for AI, or keeping knowledge docs in sync with code changes.",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "author": {
     "name": "kensenzhao"
   },

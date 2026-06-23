@@ -63,23 +63,44 @@ def parse_frontmatter(text):
 
 
 def glob_to_regex(g):
-    out, i = [], 0
-    while i < len(g):
+    """gitignore 风格的 glob→正则。三条关键语义(均有回归用例)：
+      - `**` 跨目录且含零层：`a/**/b` 匹配 `a/b` 与 `a/x/b`。
+      - 尾部单 `*` 收到段末：`lib/*` 只匹配直接子项,不越过 `/`。
+      - 非通配结尾按"精确或目录前缀"收口：`src` 匹配 `src`、`src/x`,但**不**匹配 `srcfoo`
+        (修复裸前缀过匹配导致的 STALE 误报)。
+    """
+    out, i, n = [], 0, len(g)
+    while i < n:
         c = g[i]
         if c == "*":
             if g[i:i + 2] == "**":
-                out.append(".*"); i += 2; continue
-            out.append("[^/]*")
-        elif c in ".+()[]{}^$|\\":
+                j = i + 2
+                if j < n and g[j] == "/":
+                    out.append("(?:.*/)?"); i = j + 1; continue  # `**/` 含零层目录
+                out.append(".*"); i = j; continue                # 尾部/裸 `**`:开放
+            out.append("[^/]*"); i += 1; continue                # 段内单 `*`
+        if c in ".+()[]{}^$|\\":
             out.append("\\" + c)
         else:
             out.append(c)
         i += 1
-    return re.compile("^" + "".join(out))
+    pat = "".join(out)
+    if g.endswith("**"):
+        return re.compile("^" + pat)              # 递归:开放结尾
+    if g.endswith("*"):
+        return re.compile("^" + pat + "$")        # 尾部单 *:收到段末,不越目录
+    return re.compile("^" + pat + "(?:/|$)")       # 精确路径/目录前缀,收口防裸前缀误匹配
 
 
 def git_commit_exists(sha, cwd):
     return subprocess.run(["git", "cat-file", "-e", sha], cwd=cwd, capture_output=True).returncode == 0
+
+
+def is_shallow_repo(cwd):
+    # 浅克隆(git clone --depth N)里历史 SHA 多半不在本地,据此让"锚点异常"静默,
+    # 避免团队成员浅克隆后首个会话被刷一屏假异常。
+    out = subprocess.run(["git", "rev-parse", "--is-shallow-repository"], cwd=cwd, capture_output=True, text=True)
+    return out.stdout.strip() == "true"
 
 
 def changed_since(sha, cwd):
@@ -144,7 +165,12 @@ def print_report(rootstr, anchored, rows, gaps, broken):
     n_stale = sum(1 for r in rows if r[3])
     max_lag = max([r[2] for r in rows if r[2] is not None] or [0])
     tot_unv = sum(r[4] for r in rows)
-    print(f"  覆盖缺口(GAP): {len(gaps)}" + ("  → " + ", ".join(gaps) if gaps else "（无 / 未配 .claude/knowledge-drift.config）"))
+    if gaps:
+        print(f"  覆盖缺口(GAP): {len(gaps)}  → " + ", ".join(gaps))
+    elif load_module_globs(Path(rootstr)) is not None:
+        print("  覆盖缺口(GAP): 0（已配 .claude/knowledge-drift.config,无缺口）")
+    else:
+        print("  覆盖缺口(GAP): 0（未配 .claude/knowledge-drift.config,跳过 GAP 检测）")
     if broken:
         print(f"  锚点异常: {len(broken)}  → " + "; ".join(broken))
     print(f"  小结: STALE {n_stale} · GAP {len(gaps)} · 未验证合计 {tot_unv} · 最大滞后 {max_lag} commit(仅供参考)")
@@ -170,6 +196,20 @@ def main():
         if p.exists():
             docs.extend(sorted(p.rglob("*.md")))
 
+    shallow = is_shallow_repo(rootstr)
+    # 按 verified_at 分组缓存:刚 bootstrap 时多篇文档同一 SHA,从 N 次 git diff 降到 1 次。
+    diff_cache, exists_cache = {}, {}
+
+    def commit_ok_cached(sha):
+        if sha not in exists_cache:
+            exists_cache[sha] = git_commit_exists(sha, rootstr)
+        return exists_cache[sha]
+
+    def changed_cached(sha):
+        if sha not in diff_cache:
+            diff_cache[sha] = changed_since(sha, rootstr)
+        return diff_cache[sha]
+
     anchored = 0
     stale, broken, all_sources, rows = [], [], [], []
     for doc in docs:
@@ -182,12 +222,13 @@ def main():
             continue
         anchored += 1
         all_sources.extend(sources)
-        commit_ok = git_commit_exists(verified_at, rootstr)
-        if not commit_ok:
+        commit_ok = commit_ok_cached(verified_at)
+        # 浅克隆里 SHA 缺失多为历史被截断而非真异常 -> 静默,不报"锚点异常"也不误判 STALE
+        if not commit_ok and not shallow:
             broken.append(f"{rel}: verified_at={verified_at} 不存在")
         hits = []
         if commit_ok:
-            changed = changed_since(verified_at, rootstr)
+            changed = changed_cached(verified_at)
             if changed:
                 regexes = [glob_to_regex(g) for g in sources]
                 hits = [f for f in changed if any(rx.match(f) for rx in regexes)]
