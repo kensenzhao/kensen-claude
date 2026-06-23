@@ -4,7 +4,7 @@ description: 在本仓库(kensen-claude)改 knowledge-keeper 插件代码时必�
 sources:
   - plugins/knowledge-keeper/test.sh
   - plugins/knowledge-keeper/release.sh
-verified_at: e21654f
+verified_at: 1e393aa
 ---
 
 # iterate-plugin — 安全迭代 knowledge-keeper
