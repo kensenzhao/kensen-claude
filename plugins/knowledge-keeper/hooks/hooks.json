@@ -1,0 +1,15 @@
+{
+  "description": "Knowledge Keeper：会话结束检测知识漂移，仅在出现新漂移时极简提醒一次",
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/scripts/stop-hook-knowledge-drift.py\" --check \"${CLAUDE_PLUGIN_ROOT}/scripts/check-knowledge-drift.py\""
+          }
+        ]
+      }
+    ]
+  }
+}

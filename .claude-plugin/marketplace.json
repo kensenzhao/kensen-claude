@@ -1,0 +1,16 @@
+{
+  "name": "kensen-claude",
+  "owner": {
+    "name": "kensenzhao"
+  },
+  "metadata": {
+    "description": "kensenzhao 的 Claude Code 工具市场(插件/技能等)"
+  },
+  "plugins": [
+    {
+      "name": "knowledge-keeper",
+      "source": "./plugins/knowledge-keeper",
+      "description": "给任意项目自举 AI 知识体系(skills+knowledge) + 随代码自动保鲜:确定性漂移检测 + 安静 Stop hook + 维护技能 + 一键 bootstrap"
+    }
+  ]
+}
