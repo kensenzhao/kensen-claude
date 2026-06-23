@@ -46,12 +46,18 @@ def main():
         sys.exit(0)
 
     base = os.environ.get("CLAUDE_PROJECT_DIR") or os.getcwd()
-    res = subprocess.run(["python3", check_script], capture_output=True, text=True, cwd=base)
 
     # 状态文件放"git 仓库根"——避免 CLAUDE_PROJECT_DIR 缺失时写错位置/污染插件目录。
-    # 注：只有存在 git 仓库时检测脚本才可能 returncode==3，故此处 git 根可靠。
     rp = subprocess.run(["git", "rev-parse", "--show-toplevel"], cwd=base, capture_output=True, text=True)
     project_root = rp.stdout.strip() if rp.returncode == 0 else base
+
+    # 让位：若本项目自带漂移脚本(自包含,如把脚本焊进仓库的团队项目)，由它自己的 hook 管，
+    # 插件不重复触发(否则双 hook + 共用 .drift-state 互相打架)。
+    for marker in ("scripts/check-knowledge-drift.py", "scripts/stop-hook-knowledge-drift.py"):
+        if os.path.exists(os.path.join(project_root, marker)):
+            sys.exit(0)
+
+    res = subprocess.run(["python3", check_script], capture_output=True, text=True, cwd=base)
     state_path = os.path.join(project_root, STATE_FILE)
 
     if res.returncode != 3:

@@ -74,6 +74,19 @@ out=$( cd "$r" && python3 "$CHK" --report ); code=$?
 { [ $code -eq 0 ] && echo "$out" | grep -q "评估: 健康"; } && ok "report 健康" || no "report (code=$code)"
 rm -rf "$r"
 
+echo "9) 让位: 项目自带 scripts/ 漂移脚本时,插件 hook 退让(exit0),否则正常 exit2"
+r=$(mkrepo); mkdir -p "$r/lib"; echo a > "$r/lib/A.txt"
+( cd "$r" && git add -A && git "${GU[@]}" commit -q -m c1 )
+anchor "$r" doc "lib/**" "$(git -C "$r" rev-parse --short HEAD)"
+echo b >> "$r/lib/A.txt"; ( cd "$r" && git add -A && git "${GU[@]}" commit -q -m c2 )   # 造 STALE
+rm -f "$r/.claude/.drift-state"
+cNo=$(echo '{}' | CLAUDE_PROJECT_DIR="$r" python3 "$HOOK" --check "$CHK" >/dev/null 2>&1; echo $?)
+mkdir -p "$r/scripts"; echo '#' > "$r/scripts/check-knowledge-drift.py"   # 标记:本项目自带
+rm -f "$r/.claude/.drift-state"
+cYes=$(echo '{}' | CLAUDE_PROJECT_DIR="$r" python3 "$HOOK" --check "$CHK" >/dev/null 2>&1; echo $?)
+{ [ "$cNo" = 2 ] && [ "$cYes" = 0 ]; } && ok "defer-to-local (无=2 有=0)" || no "defer (got 无=$cNo 有=$cYes)"
+rm -rf "$r"
+
 echo ""
 echo "==== 结果: PASS=$PASS  FAIL=$FAIL ===="
 [ $FAIL -eq 0 ] && { echo "全部通过 ✅"; exit 0; } || { echo "有失败 ❌"; exit 1; }

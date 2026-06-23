@@ -44,6 +44,9 @@ knowledge-keeper/
 - **日常维护**：你改完业务代码并提交后，AI 按 `skill-maintenance` 自主同步受影响文档；会话结束时插件 Stop hook 若发现漂移会**极简提醒一次**(同一组漂移不重复刷屏)。
 - **(可选) GAP 检测**：在目标项目根建 `.claude/knowledge-drift.config`，每行一个业务模块 glob(如 `src/*`)，即可检测"哪个模块还没文档覆盖"。
 
+## 与"项目自带副本"共存（重要）
+若某项目把漂移脚本**焊进了自己仓库**（存在 `scripts/check-knowledge-drift.py` 或 `scripts/stop-hook-knowledge-drift.py`，常见于团队共享仓库为了"别人不装插件也能用"），插件的全局 Stop hook 会**自动退让**(exit 0)，交给该项目自己的 hook，避免双触发 + 抢同一个 `.drift-state`。所以你可以放心在 user 级全局启用插件，不会打扰这类自包含项目。
+
 ## 不想用插件？手动装(等价)
 把 `scripts/` 两个脚本拷进目标项目 `scripts/`，并在项目 `.claude/settings.json` 注册 Stop hook：
 ```json
