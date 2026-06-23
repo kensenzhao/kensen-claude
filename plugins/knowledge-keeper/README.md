@@ -60,39 +60,29 @@
 
 ---
 
-## 📋 命令与用法清单
+## 📋 怎么用这个插件
 
-本插件的"命令"分三类:在 Claude Code 里输入的**斜杠命令**、直接跟 AI 说的**技能**、在终端跑的**脚本**(可选)。
+> 安装见上方「📥 安装」;更新插件见 [根 README「保持更新」](../../README.md#-保持更新)。
+> 下面是 knowledge-keeper **自己**的用法——主要靠"跟 AI 说话",脚本是可选的。
 
-### ① 在 Claude Code 里输入(斜杠命令)
-| 命令 | 作用 |
-|---|---|
-| `/plugin marketplace add kensenzhao/kensen-claude` | 添加市场(只需一次) |
-| `/plugin install knowledge-keeper@kensen-claude` | 安装插件 |
-| `/reload-plugins` | 让插件生效 / 更新后重载 |
-| `/plugin marketplace update kensen-claude` | 刷新市场清单(更新插件前先跑) |
-| `/plugin update knowledge-keeper@kensen-claude` | 更新已安装的插件 |
-
-### ② 跟 AI 说的话(技能,直接用自然语言)
+### 🗣 跟 AI 说的话(主要用法,你 90% 的时间就用这三句)
 | 你说什么 | AI 会做什么 |
 |---|---|
-| `按 knowledge-bootstrap 给本项目建知识体系` | 读真实代码,生成说明书 + 操作指南 |
-| `用 skill-maintenance 同步` | 核对代码、更新过时的说明书并标记为最新 |
-| `不对,本项目其实是 …` | 把你的纠正记进说明书,下次不再错 |
+| `按 knowledge-bootstrap 给本项目建知识体系` | 读真实代码,生成项目说明书 + 操作指南到 `.claude/knowledge` 和 `.claude/skills` |
+| `用 skill-maintenance 同步` | 核对代码、更新过时的说明书,并标记为"已核对到最新" |
+| `不对,本项目其实是 …`(随口纠正) | 把你的纠正记进对应说明书,下次不再错 |
 
-> 这两个技能(`knowledge-bootstrap` / `skill-maintenance`)是自然语言触发,**不是斜杠命令**,把上面的话说给 AI 即可。
+> 这两个是**技能**,自然语言触发——直接把上面的话说给 AI 即可,**不是斜杠命令**。
 
-### ③ 在终端跑(脚本,可选 —— 想手动检查时用)
-插件装在这里(`<版本>` 形如 `0.4.0`):
-```bash
-~/.claude/plugins/cache/kensen-claude/knowledge-keeper/<版本>/scripts/
-```
-| 命令(在你的项目根目录跑) | 作用 |
+### 💻 在终端跑的脚本(可选,想手动检查时才用)
+插件装在 `~/.claude/plugins/cache/kensen-claude/knowledge-keeper/<版本>/scripts/`(`<版本>` 形如 `0.4.0`)。在**你的项目根目录**跑:
+
+| 命令 | 作用 |
 |---|---|
 | `python3 <上面路径>/check-knowledge-drift.py` | 立刻检测有没有说明书过时(退出码 `0`=没事 / `3`=有) |
-| `python3 <上面路径>/check-knowledge-drift.py --report` | 打印**健康报告**:几篇可能过时、哪些模块没文档 |
+| `python3 <上面路径>/check-knowledge-drift.py --report` | 打印**健康报告**:几篇可能过时、哪些模块还没文档覆盖 |
 
-### 配置文件(可选)
+### ⚙️ 配置文件(可选)
 在项目根建 `.claude/knowledge-drift.config`,每行写一个模块路径(如 `src/*`、`apps/*`),即可额外检查"哪个模块还没有任何说明书覆盖"。
 
 ---
@@ -105,7 +95,7 @@
 
 **会拖慢我 / 偷偷花钱吗?** 不会。没漂移时完全安静、零 token(纯本地 `git` + `python3`)。
 
-**作者发了新版没生效?** 开了自动更新就会启动时自动更;没开就手动更新(见上「命令清单 ①」的 `marketplace update` + `update`)。
+**作者发了新版没生效?** 开了自动更新就会启动时自动更;没开就手动更新——见 [根 README「保持更新」](../../README.md#-保持更新)。
 
 ---
 
