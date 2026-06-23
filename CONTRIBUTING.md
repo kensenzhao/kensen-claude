@@ -58,8 +58,14 @@ plugins/<name>/
 ## 给维护者            — 一句话 + 链到 ITERATING / playbook
 ```
 
+### ℹ️ 技能(skills)就是斜杠命令(官方:commands 已并入 skills)
+`skills/<name>/SKILL.md` 会**自动生成斜杠命令** `/<插件名>:<name>`,用户既能 `/` 菜单里显式调、也能自然语言唤起、还会按 description 自动触发。所以:
+- **插件 README 要把技能的斜杠形式和自然语言触发都写上**(给个两列对照表),并提一句"输入 `/` 可在菜单发现"。
+- **别声称"技能不是斜杠命令"**(错的)。
+- 想禁掉自动触发 / 改可见性,用 SKILL.md frontmatter 的 `disable-model-invocation` / `user-invocable`,不用另建 `commands/`。
+
 ### ❌ 别这样写(都是踩过的坑)
-- **别在插件 README 里列通用插件管理命令**(`/plugin marketplace add`、`/plugin install`、`/plugin update`)当成"本插件命令"——那是市场级的,归根 README;安装只在插件"安装"小节留 3 行即可。
+- **区分两类"斜杠命令"**:`/plugin marketplace add|install|update` 是**市场管理命令**(市场级,归根 README,插件只在"安装"小节留 3 行);`/<插件名>:<技能名>` 才是**本插件的命令**(要写在插件 README)。别把前者当成"本插件命令"列一堆。
 - **"怎么用这个插件"一节只放本插件自己的能力**(它的技能/命令/脚本),且**最常用的置顶**(知识类插件就是"跟 AI 说的话",别让它被通用命令或可选脚本淹没)。
 - **别把市场总览/价值主张/对比 在插件 README 重写一遍**——根 README 已有,链回即可。
 - **根 README 不准出现单插件的 `##` 专属段**;每个插件在根里只占"插件表"一行。

@@ -65,14 +65,14 @@
 > 安装见上方「📥 安装」;更新插件见 根 README 的「🔄 保持更新」一节(见 [../../README.md](../../README.md))。
 > 下面是 knowledge-keeper **自己**的用法——主要靠"跟 AI 说话",脚本是可选的。
 
-### 🗣 跟 AI 说的话(主要用法,你 90% 的时间就用这三句)
-| 你说什么 | AI 会做什么 |
-|---|---|
-| `按 knowledge-bootstrap 给本项目建知识体系` | 读真实代码,生成项目说明书 + 操作指南到 `.claude/knowledge` 和 `.claude/skills` |
-| `用 skill-maintenance 同步` | 核对代码、更新过时的说明书,并标记为"已核对到最新" |
-| `不对,本项目其实是 …`(随口纠正) | 把你的纠正记进对应说明书,下次不再错 |
+本插件靠两个**技能**干活。技能在 Claude Code 里**既是斜杠命令、也能自然语言唤起、还会按场景自动触发**:
 
-> 这两个是**技能**,自然语言触发——直接把上面的话说给 AI 即可,**不是斜杠命令**。
+| 技能 | 斜杠命令(显式触发) | 或自然语言这样说 | 作用 |
+|---|---|---|---|
+| **建知识库** | `/knowledge-keeper:knowledge-bootstrap` | 「按 knowledge-bootstrap 给本项目建知识体系」 | 读真实代码,生成说明书 + 操作指南到 `.claude/knowledge` 和 `.claude/skills` |
+| **同步维护** | `/knowledge-keeper:skill-maintenance` | 「用 skill-maintenance 同步」 | 核对代码、更新过时的说明书,并标记为"已核对到最新" |
+
+> 输入 `/` 就能在菜单里看到这两个命令(确切名字以菜单为准)。它们**也会自动触发**:当你纠正 AI(「不对,本项目其实是 …」)、提交了影响说明书的代码、或会话结束发现漂移时,AI 会自己用 `skill-maintenance`——不用你记着调。
 
 ### 💻 在终端跑的脚本(可选,想手动检查时才用)
 插件装在 `~/.claude/plugins/cache/kensen-claude/knowledge-keeper/<版本>/scripts/`(`<版本>` 形如 `0.4.0`)。在**你的项目根目录**跑:
