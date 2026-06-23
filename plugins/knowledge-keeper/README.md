@@ -27,7 +27,7 @@
 /reload-plugins
 ```
 
-💡 想以后自动更新(设一次):`/plugin` → **Marketplaces** → 选中 `kensen-claude` → **Enable auto-update**。
+💡 想让插件以后自动更新?设置方法见根 README 的「🔄 保持更新」([../../README.md](../../README.md))。
 
 ---
 
