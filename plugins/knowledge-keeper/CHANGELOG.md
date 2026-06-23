@@ -20,7 +20,7 @@
 
 **工程**
 - 新增 `CHANGELOG.md` 与 `release.sh` 发布护栏。
-- README 重排为同事优先(前置要求 / 安装 / quickstart / FAQ)。
+- README 重排为同事优先:价值主张 / 工作原理 / 对比 CLAUDE.md / 前置要求 / 安装 / quickstart / **保持更新(自动更新 vs 手动)** / FAQ。仓库已公开,移除鉴权前置。
 - 本仓库吃自己狗粮:`.claude/knowledge` + `.claude/skills` 锚定知识库。
 
 ## [0.3.0] — 让位护栏
