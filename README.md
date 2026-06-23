@@ -27,19 +27,12 @@
 
 ## 📦 收录的插件
 
-| 插件 | 安装名 | 最新版 | 一句话 |
-|------|--------|--------|--------|
-| [**knowledge-keeper**](plugins/knowledge-keeper/) | `knowledge-keeper@kensen-claude` | `v0.4.0` | 给项目自举一套 AI 知识体系并随代码**自动保鲜**:确定性漂移检测 + 安静 Stop hook + 维护技能 + 一键 bootstrap |
+| 插件 | 一句话 | 安装名 | 版本 | 文档 |
+|------|--------|--------|------|------|
+| **knowledge-keeper** | 给项目自举 AI 知识体系并随代码**自动保鲜**(漂移检测 + 维护技能 + 一键 bootstrap);前 / 后 / 混合栈通用 | `knowledge-keeper@kensen-claude` | `v0.4.0` | [📖 README](plugins/knowledge-keeper/README.md) |
 
-### knowledge-keeper
-
-让 Claude **一上手就精通你的项目**,并且这套"项目知识"会随代码自动保鲜、不会悄悄烂掉。后端 / 前端 / 前后端混合(monorepo)通用。
-
-- **knowledge**(参考文档,按需读)+ **skills**(操作手册,自动触发),每条断言带 `文件:行号`。
-- 代码一改,确定性脚本算出哪篇文档因哪个文件过时,会话结束**极简提醒一次**——不靠人记得更新,几乎零 token。
-- 与 `CLAUDE.md` / wiki 的关键差异:别的文档会**悄悄烂掉**,它能**确定性检测**文档与代码的漂移。
-
-详细用法、工作原理、FAQ → **[插件 README](plugins/knowledge-keeper/README.md)**。
+> 安装某个插件:`/plugin install <安装名>` 然后 `/reload-plugins`;点「📖 README」看该插件的完整用法与命令。
+> **以后每多一个插件,这张表多一行就行**,根 README 其余部分不动。
 
 ---
 
@@ -62,12 +55,12 @@
 ```
 kensen-claude/
 ├── .claude-plugin/marketplace.json   # 市场清单(列出所有插件及其 source)
+├── CONTRIBUTING.md                   # 通用约定:目录/文档规范 + 发布流程
 └── plugins/
-    └── knowledge-keeper/             # 各插件自包含:含自己的 README/CHANGELOG/test/release
+    └── <插件>/                       # 各插件自包含:README / CHANGELOG / test.sh / release.sh
 ```
 
-- 每个插件自带回归套件 `test.sh` 与发布护栏 `release.sh`(回归绿 + 版本已升 + CHANGELOG 有条目 + 工作树干净,四校验任一不过即拒绝发布)。
-- 迭代与发布流程见各插件的 `ITERATING.md`。
+想加新插件或发布新版?**目录约定、文档规范、版本与发布流程见 [`CONTRIBUTING.md`](CONTRIBUTING.md)。** 各插件更细的迭代方法见其 `ITERATING.md`。
 
 ---
 
