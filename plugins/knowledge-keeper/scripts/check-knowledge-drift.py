@@ -87,6 +87,14 @@ def changed_since(sha, cwd):
     return [l for l in out.stdout.splitlines() if l.strip()]
 
 
+def commits_behind(sha, cwd):
+    out = subprocess.run(["git", "rev-list", "--count", f"{sha}..HEAD"], cwd=cwd, capture_output=True, text=True)
+    try:
+        return int(out.stdout.strip())
+    except ValueError:
+        return None
+
+
 def load_module_globs(root):
     cfg = root / CONFIG_FILE
     if not cfg.exists():
@@ -99,7 +107,60 @@ def load_module_globs(root):
     return globs or None
 
 
+def gap_check(rootstr, all_sources):
+    """返回未被任何 doc 的 sources 覆盖的业务模块目录(需项目提供 module glob 配置)。"""
+    gap = []
+    module_globs = load_module_globs(Path(rootstr))
+    if module_globs:
+        norm = [s.split("*")[0].rstrip("/") for s in all_sources]
+        for mg in module_globs:
+            for mod_abs in _glob.glob(os.path.join(rootstr, mg)):
+                if not os.path.isdir(mod_abs) or os.path.basename(mod_abs) in IGNORE_DIRS:
+                    continue
+                mod = os.path.relpath(mod_abs, rootstr)
+                if not any(s == mod or s.startswith(mod + "/") for s in norm):
+                    gap.append(mod)
+    return sorted(set(gap))
+
+
+def print_report(rootstr, anchored, rows, gaps, broken):
+    """知识健康报告(--report)：新鲜度+覆盖度,判断这个项目里知识体系用得好不好。"""
+    head = subprocess.run(["git", "rev-parse", "--short", "HEAD"], cwd=rootstr,
+                          capture_output=True, text=True).stdout.strip() or "?"
+    print(f"知识健康报告 · {os.path.basename(rootstr)} @ {head}")
+    if anchored == 0:
+        print("  本项目没有任何带 sources+verified_at 的锚定文档（未启用本知识体系）。")
+        return
+    print(f"  锚定文档: {anchored}")
+
+    def short(rel):  # 去掉 .claude/ 前缀并截断,保证列对齐
+        s = rel[len(".claude/"):] if rel.startswith(".claude/") else rel
+        return s if len(s) <= 38 else "…" + s[-37:]
+
+    print(f"  {'文档':<40}{'verified_at':<12}{'滞后':>5}{'STALE':>6}{'未验证':>6}{'src':>5}")
+    for rel, va, lag, is_stale, unv, nsrc, ok in rows:
+        lag_s = "?" if (lag is None) else str(lag)
+        print(f"  {short(rel):<40}{va:<12}{lag_s:>5}{('是' if is_stale else '否'):>6}{unv:>6}{nsrc:>5}")
+    n_stale = sum(1 for r in rows if r[3])
+    max_lag = max([r[2] for r in rows if r[2] is not None] or [0])
+    tot_unv = sum(r[4] for r in rows)
+    print(f"  覆盖缺口(GAP): {len(gaps)}" + ("  → " + ", ".join(gaps) if gaps else "（无 / 未配 .claude/knowledge-drift.config）"))
+    if broken:
+        print(f"  锚点异常: {len(broken)}  → " + "; ".join(broken))
+    print(f"  小结: STALE {n_stale} · GAP {len(gaps)} · 未验证合计 {tot_unv} · 最大滞后 {max_lag} commit(仅供参考)")
+    # 健康判据：STALE/GAP/锚点异常 才是真问题；滞后大但 STALE=0 说明那些提交没碰被记录的代码,不算问题
+    if n_stale == 0 and not gaps and not broken:
+        print(f"  评估: 健康" + ("（滞后偏大但无 STALE,即近期提交未触及已记录代码,正常）" if max_lag > 10 else ""))
+    else:
+        print(f"  评估: 需关注 —— " + "；".join(filter(None, [
+            f"{n_stale} 篇 STALE 待同步" if n_stale else "",
+            f"{len(gaps)} 个模块无覆盖" if gaps else "",
+            f"{len(broken)} 处锚点异常" if broken else "",
+        ])))
+
+
 def main():
+    report = "--report" in sys.argv
     root = repo_root()
     rootstr = str(root)
 
@@ -110,9 +171,9 @@ def main():
             docs.extend(sorted(p.rglob("*.md")))
 
     anchored = 0
-    stale, broken, all_sources = [], [], []
+    stale, broken, all_sources, rows = [], [], [], []
     for doc in docs:
-        rel = doc.relative_to(root)
+        rel = str(doc.relative_to(root))
         # 只读前 64KB 解析 frontmatter，防超大/恶意文件吃内存
         with doc.open(encoding="utf-8", errors="replace") as f:
             head = f.read(65536)
@@ -121,35 +182,34 @@ def main():
             continue
         anchored += 1
         all_sources.extend(sources)
-        if not git_commit_exists(verified_at, rootstr):
-            broken.append(f"{rel}: verified_at={verified_at} 在本仓库不存在")
-            continue
-        changed = changed_since(verified_at, rootstr)
-        if not changed:
-            continue
-        regexes = [glob_to_regex(g) for g in sources]
-        hits = [f for f in changed if any(rx.match(f) for rx in regexes)]
+        commit_ok = git_commit_exists(verified_at, rootstr)
+        if not commit_ok:
+            broken.append(f"{rel}: verified_at={verified_at} 不存在")
+        hits = []
+        if commit_ok:
+            changed = changed_since(verified_at, rootstr)
+            if changed:
+                regexes = [glob_to_regex(g) for g in sources]
+                hits = [f for f in changed if any(rx.match(f) for rx in regexes)]
         if hits:
-            stale.append((str(rel), verified_at, len(hits), hits[:8],
+            stale.append((rel, verified_at, len(hits), hits[:8],
                           "" if len(hits) <= 8 else f" …(+{len(hits) - 8})"))
+        if report:
+            lag = commits_behind(verified_at, rootstr) if commit_ok else None
+            unv = doc.read_text(encoding="utf-8", errors="replace").count("⚠️未验证")
+            rows.append((rel, verified_at, lag, bool(hits), unv, len(sources), commit_ok))
+
+    # 报告模式：打印健康度，恒 exit 0
+    if report:
+        gaps = gap_check(rootstr, all_sources)
+        print_report(rootstr, anchored, rows, gaps, broken)
+        sys.exit(0)
 
     # 无锚定文档 -> 本项目没用这套体系，静默退出（插件无感）
     if anchored == 0:
         sys.exit(0)
 
-    # GAP：仅当项目提供了模块 glob 配置时才检查
-    gap_notes = []
-    module_globs = load_module_globs(root)
-    if module_globs:
-        norm_sources = [s.split("*")[0].rstrip("/") for s in all_sources]
-        for mg in module_globs:
-            # 用绝对 glob 再转回仓库根相对路径，避免依赖进程 cwd(已去掉 chdir)
-            for mod_abs in _glob.glob(os.path.join(rootstr, mg)):
-                if not os.path.isdir(mod_abs) or os.path.basename(mod_abs) in IGNORE_DIRS:
-                    continue
-                mod = os.path.relpath(mod_abs, rootstr)
-                if not any(s == mod or s.startswith(mod + "/") for s in norm_sources):
-                    gap_notes.append(mod)
+    gap_notes = gap_check(rootstr, all_sources)
 
     if not (stale or gap_notes or broken):
         sys.exit(0)

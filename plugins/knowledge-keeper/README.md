@@ -60,8 +60,15 @@ echo '{}' | CLAUDE_PROJECT_DIR="$PWD" python3 <插件路径>/scripts/stop-hook-k
 ```
 没用这套体系的项目(无锚定文档)→ 静默 exit 0；有未同步漂移 → exit 2 + 一行提醒。
 
+## 判断某项目用得好不好（健康报告）
+```bash
+python3 <插件>/scripts/check-knowledge-drift.py --report
+```
+输出该项目知识库的 STALE / GAP / 未验证 / 滞后，一眼看出在这个项目里是被维护着还是在烂尾。
+
 ## 维护本插件
-独立 git 仓库，改完提交即可。改了脚本/技能后，在 Claude Code 里 `/plugin`(或重载)让改动生效。依赖仅 `python3` + `git`。
+独立 git 仓库。**改动循环、回归测试、怎么判断效果、怎么把各项目反馈反哺回来——见 [`ITERATING.md`](ITERATING.md)**。
+关键：改完先 `bash test.sh`（回归套件，全绿才提交）；改了脚本/技能后已安装副本需 `/plugin marketplace update kensen-claude` + `/reload-plugins` 才生效。依赖仅 `python3` + `git`。
 
 ## 设计依据
 完整方法论与"为什么这么设计"见 `reference/playbook.md`。两条 sources 铁律：①只锚代码不锚文档；②慎锚热点宽文件。
