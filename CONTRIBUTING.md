@@ -8,6 +8,8 @@
 
 ## 1. 目录约定
 
+> **起新插件最快方式**:`bash new-plugin.sh <name> "一句话描述"` —— 自动生成下面整套骨架(plugin.json/README/CHANGELOG/test.sh/release.sh,按本规范预填)并注册进 `marketplace.json`,你只需填空。手动建也行,照下面结构来。
+
 每个插件**自包含**在 `plugins/<name>/` 下:
 
 ```
