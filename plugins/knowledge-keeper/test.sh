@@ -143,6 +143,9 @@ out2=$( cd "$r2" && python3 "$CHK" --report )
 echo "$out2" | grep -q "未配" && ok "未配置时提示未配" || no "未配置措辞缺失"
 rm -rf "$r" "$r2"
 
+echo "15) release.sh 语法正确(发布护栏脚本)"
+bash -n "$HERE/release.sh" 2>/dev/null && ok "release.sh 语法" || no "release.sh 语法"
+
 echo ""
 echo "==== 结果: PASS=$PASS  FAIL=$FAIL ===="
 [ $FAIL -eq 0 ] && { echo "全部通过 ✅"; exit 0; } || { echo "有失败 ❌"; exit 1; }

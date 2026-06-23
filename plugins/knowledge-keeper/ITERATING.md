@@ -7,15 +7,20 @@
 # 2. 跑回归,全绿才继续
 bash plugins/knowledge-keeper/test.sh
 # 3. 升版本号(plugins/knowledge-keeper/.claude-plugin/plugin.json 的 version)
-# 4. 提交并推送
-git commit -am "..." && git push
-# 5. 让已安装的副本拉到新版(装的是缓存副本,不 update 不生效!)
+# 4. 在 CHANGELOG.md 顶部加该版本条目
+# 5. 提交所有改动(工作树必须干净)
+git commit -am "..."
+# 6. 发布护栏:一条命令做完"回归→校验版本/CHANGELOG/干净→打 tag→推送"
+bash plugins/knowledge-keeper/release.sh --dry-run   # 先空跑校验
+bash plugins/knowledge-keeper/release.sh             # 通过后真发布
+# 7. 让已安装的副本拉到新版(装的是缓存副本,不 update 不生效!)
 #    在 Claude Code 里:
 /plugin marketplace update kensen-claude
 /reload-plugins
 ```
 
 **没有第 2 步就别改**——回归套件是你敢动手的底气。
+**`release.sh` 是发布红线**:回归不绿 / 版本没升(tag 已存在)/ CHANGELOG 缺条目 / 工作树脏,四者任一即拒绝发布,杜绝"忘了升版本就推上去"。
 
 ### 加回归用例
 每修一个 bug / 加一个行为，去 `test.sh` 加一段：建临时 git fixture → 跑脚本 → 断言退出码/输出 → `ok`/`no`。套件用 `mkrepo`/`anchor` 两个辅助函数造 fixture，照抄现有用例即可。**修过的 bug 必须留一条用例**，防回归。

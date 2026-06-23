@@ -3,6 +3,7 @@ name: iterate-plugin
 description: 在本仓库(kensen-claude)改 knowledge-keeper 插件代码时必须使用——给出"改→回归→升版→推→让已装副本生效"的标准闭环与回归用例写法。涉及改 scripts/*.py、test.sh、hooks.json、模板或技能时触发。
 sources:
   - plugins/knowledge-keeper/test.sh
+  - plugins/knowledge-keeper/release.sh
 verified_at: 1cfcdd6
 ---
 
@@ -18,14 +19,15 @@ verified_at: 1cfcdd6
 
 闭环(摘自 `ITERATING.md`):
 ```bash
-# 1. 改源码(就在本仓库)
-# 2. 跑回归,全绿才继续
-bash plugins/knowledge-keeper/test.sh
-# 3. 升版本号 plugins/knowledge-keeper/.claude-plugin/plugin.json 的 version
-# 4. git commit && git push
-# 5. 让已装副本拉新版(装的是缓存副本,不 update 不生效!)
-#    在 Claude Code: /plugin marketplace update kensen-claude  然后 /reload-plugins
+# 1. 改源码;2. bash plugins/knowledge-keeper/test.sh 全绿
+# 3. 升 plugin.json 的 version;4. CHANGELOG.md 加该版本条目
+# 5. git commit(工作树要干净)
+# 6. 发布护栏(回归/版本/CHANGELOG/干净 四校验,过了才打 tag+推送):
+bash plugins/knowledge-keeper/release.sh --dry-run   # 先空跑
+bash plugins/knowledge-keeper/release.sh             # 真发布
+# 7. /plugin marketplace update kensen-claude 然后 /reload-plugins(否则装的是旧缓存)
 ```
+`release.sh` 见 `plugins/knowledge-keeper/release.sh`:测试不绿 / 版本没升(tag 已存在)/ CHANGELOG 缺条目 / 工作树脏,任一即拒绝发布。
 
 ### 加回归用例(修过的 bug 必须留一条)
 `test.sh` 用两个辅助函数造临时 git fixture,照抄现有用例即可:
